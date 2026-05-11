@@ -146,8 +146,6 @@ Current local verification:
 90% total coverage
 ```
 
-For a demo-ready command sequence, see `docs/video_script.md` or run `scripts/demo_commands.ps1`.
-
 ## Project Layout
 
 ```text
@@ -170,7 +168,7 @@ The generated index file is `data/index.json`. It is ignored by Git by default s
 
 ## GenAI Use
 
-This assessment permits GenAI use with declaration and critical evaluation. See `docs/genai_reflection.md` for reflection notes to adapt for the final video demonstration.
+This assessment permits GenAI use with declaration and critical evaluation. GenAI use is declared and critically evaluated in the submitted video demonstration.
 
 ## Known Limitations
 
