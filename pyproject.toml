@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xjco3011-coursework2"
+version = "0.1.0"
+description = "A focused mini search engine for quotes.toscrape.com"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "responses>=0.25",
+]
+
+[project.scripts]
+mini-search = "search_engine.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["src/search_engine"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
