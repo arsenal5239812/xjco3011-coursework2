@@ -37,9 +37,31 @@ def test_find_supports_boolean_or_and_not():
     assert [result.doc_id for result in find(sample_index(), "brave NOT old")] == ["1"]
 
 
+def test_boolean_not_preserves_left_side_when_right_side_is_missing():
+    results = find(sample_index(), "brave NOT missing")
+
+    assert [result.doc_id for result in results] == ["1", "2"]
+
+
+def test_find_handles_empty_and_missing_queries():
+    assert find(sample_index(), "") == []
+    assert find(sample_index(), "missing") == []
+
+
+def test_find_result_includes_terminal_friendly_snippet():
+    result = find(sample_index(), "brave")[0]
+
+    assert result.snippet == "Matched terms: brave; indexed words: 3."
+
+
 def test_format_term_lookup_lists_postings():
     output = format_term_lookup(sample_index(), "world")
 
     assert "Document frequency: 2" in output
     assert "doc 1" in output
     assert "positions=" in output
+
+
+def test_format_term_lookup_handles_invalid_and_missing_terms():
+    assert format_term_lookup(sample_index(), "...") == "No valid term supplied."
+    assert format_term_lookup(sample_index(), "missing") == "No postings found for 'missing'."

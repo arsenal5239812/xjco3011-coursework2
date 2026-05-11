@@ -25,3 +25,11 @@ def test_load_index_reports_corrupt_file(tmp_path):
 
     with pytest.raises(IndexStorageError, match="not valid JSON"):
         load_index(path)
+
+
+def test_load_index_reports_invalid_shape(tmp_path):
+    path = tmp_path / "index.json"
+    path.write_text('{"metadata": {}, "documents": {}}', encoding="utf-8")
+
+    with pytest.raises(IndexStorageError, match="missing 'terms'"):
+        load_index(path)
