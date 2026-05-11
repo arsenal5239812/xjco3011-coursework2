@@ -29,3 +29,15 @@ def test_positions_by_term_groups_positions():
     grouped = positions_by_term(tokenize("a b a"))
 
     assert grouped == {"a": [0, 2], "b": [1]}
+
+
+def test_tokenize_apostrophes_numbers_and_hyphens_explicitly():
+    tokens = tokenize("Don't stop 24/7 high-quality work.")
+
+    assert [token.term for token in tokens] == ["don't", "stop", "24", "7", "high", "quality", "work"]
+
+
+def test_normalize_term_handles_noisy_inputs():
+    assert normalize_term("...Don't!!!") == "don't"
+    assert normalize_term("42,") == "42"
+    assert normalize_term("high-quality") == "high"

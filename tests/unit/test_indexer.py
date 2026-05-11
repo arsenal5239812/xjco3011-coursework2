@@ -14,6 +14,7 @@ def test_build_index_stores_documents_terms_frequencies_and_positions():
     assert index["metadata"]["unique_term_count"] == 3
     assert index["metadata"]["total_token_count"] == 5
     assert index["documents"]["1"]["word_count"] == 3
+    assert index["documents"]["1"]["preview"] == "Life is life"
     assert index["terms"]["life"]["document_frequency"] == 2
     assert index["terms"]["life"]["postings"]["1"] == {"frequency": 2, "positions": [0, 2]}
     assert index["terms"]["world"]["postings"]["2"] == {"frequency": 1, "positions": [0]}

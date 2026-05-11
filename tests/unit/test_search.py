@@ -32,6 +32,12 @@ def test_find_supports_phrase_query():
     assert [result.doc_id for result in results] == ["1"]
 
 
+def test_phrase_query_requires_consecutive_positions():
+    results = find(sample_index(), '"brave world"')
+
+    assert results == []
+
+
 def test_find_supports_boolean_or_and_not():
     assert {result.doc_id for result in find(sample_index(), "new OR old")} == {"1", "2"}
     assert [result.doc_id for result in find(sample_index(), "brave NOT old")] == ["1"]
@@ -50,6 +56,22 @@ def test_find_handles_empty_and_missing_queries():
 
 def test_find_result_includes_terminal_friendly_snippet():
     result = find(sample_index(), "brave")[0]
+
+    assert "brave" in result.snippet
+    assert "new world" in result.snippet
+
+
+def test_find_limit_truncates_ranked_results():
+    results = find(sample_index(), "world OR life", limit=1)
+
+    assert len(results) == 1
+
+
+def test_snippet_falls_back_when_preview_is_missing():
+    index = sample_index()
+    del index["documents"]["1"]["preview"]
+
+    result = find(index, "brave")[0]
 
     assert result.snippet == "Matched terms: brave; indexed words: 3."
 

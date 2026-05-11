@@ -50,6 +50,46 @@ def test_crawler_walks_internal_links_and_sleeps_between_requests(fixture_html):
     assert sleeps == [5.0]
 
 
+def test_crawler_default_scope_ignores_non_listing_pages(fixture_html):
+    pages = {
+        "https://quotes.toscrape.com/": fixture_html("page_1.html").replace(
+            "</body>",
+            '<a href="/author/Albert-Einstein/">Author</a><a href="/login">Login</a></body>',
+        ),
+        "https://quotes.toscrape.com/page/2/": fixture_html("page_2.html"),
+    }
+    session = FakeSession(pages)
+    crawler = PoliteCrawler(
+        session=session,
+        sleeper=lambda seconds: None,
+        clock=lambda: 10.0,
+    )
+
+    crawled = crawler.crawl_all(max_pages=10)
+
+    assert [page.url for page in crawled] == [
+        "https://quotes.toscrape.com/",
+        "https://quotes.toscrape.com/page/2/",
+    ]
+    requested_urls = [url for url, _ in session.requested]
+    assert "https://quotes.toscrape.com/tag/world/page/1/" not in requested_urls
+    assert "https://quotes.toscrape.com/author/Albert-Einstein/" not in requested_urls
+    assert "https://quotes.toscrape.com/login/" not in requested_urls
+
+
+def test_crawler_progress_callback_reports_successful_pages(fixture_html):
+    crawler = PoliteCrawler(
+        session=FakeSession({"https://quotes.toscrape.com/": fixture_html("page_1.html")}),
+        sleeper=lambda seconds: None,
+        clock=lambda: 10.0,
+    )
+    progress = []
+
+    crawler.crawl_all(max_pages=1, progress_callback=lambda count, url: progress.append((count, url)))
+
+    assert progress == [(1, "https://quotes.toscrape.com/")]
+
+
 def test_crawler_skips_failed_requests():
     class ErrorSession(FakeSession):
         def get(self, url, timeout):
