@@ -20,19 +20,32 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     build = subparsers.add_parser("build", help="Crawl the site and save a new index")
+    _add_subcommand_index_option(build)
     build.add_argument("--base-url", default=BASE_URL)
     build.add_argument("--max-pages", type=int, default=None)
 
-    subparsers.add_parser("load", help="Validate and summarize an existing index")
+    load = subparsers.add_parser("load", help="Validate and summarize an existing index")
+    _add_subcommand_index_option(load)
 
     print_cmd = subparsers.add_parser("print", help="Print postings for a term")
+    _add_subcommand_index_option(print_cmd)
     print_cmd.add_argument("term")
 
     find_cmd = subparsers.add_parser("find", help="Find ranked pages for a query")
-    find_cmd.add_argument("query", nargs="+")
+    _add_subcommand_index_option(find_cmd)
+    find_cmd.add_argument("query", nargs="*", help="Search query. Omit it to demonstrate empty-query handling.")
     find_cmd.add_argument("--limit", type=int, default=10)
 
     return parser
+
+
+def _add_subcommand_index_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--index",
+        type=Path,
+        default=argparse.SUPPRESS,
+        help="Path to index JSON file",
+    )
 
 
 def run(argv: list[str] | None = None) -> int:
@@ -92,6 +105,10 @@ def _run_print(args: argparse.Namespace) -> int:
 def _run_find(args: argparse.Namespace) -> int:
     index = load_index(args.index)
     query = " ".join(args.query)
+    if not query.strip():
+        print("No query supplied. Please enter one or more search terms.")
+        return 0
+
     results = find(index, query, limit=args.limit)
     if not results:
         print(f"No results found for '{query}'.")
@@ -102,4 +119,6 @@ def _run_find(args: argparse.Namespace) -> int:
         print(f"{rank}. score={result.score:.4f} doc={result.doc_id} terms={terms}")
         print(f"   {result.title}")
         print(f"   {result.url}")
+        if result.snippet:
+            print(f"   {result.snippet}")
     return 0

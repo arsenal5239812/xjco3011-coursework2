@@ -88,7 +88,6 @@ def _boolean_doc_ids(index: dict, query: str) -> tuple[set[str], list[str]]:
         return set(), terms
 
     current = _docs_for_query_part(index, parts[0])
-    all_docs = set(index.get("documents", {}))
     index_pos = 1
     while index_pos < len(parts):
         operator = parts[index_pos].upper()
@@ -98,7 +97,7 @@ def _boolean_doc_ids(index: dict, query: str) -> tuple[set[str], list[str]]:
         elif operator == "OR":
             current |= right
         elif operator == "NOT":
-            current -= right or all_docs
+            current -= right
         index_pos += 2
     return current, terms
 
@@ -135,4 +134,11 @@ def _to_result(index: dict, doc_id: str, score: float, terms: list[str]) -> Sear
         title=doc["title"],
         score=score,
         matched_terms=matched_terms,
+        snippet=_make_snippet(doc, matched_terms),
     )
+
+
+def _make_snippet(doc: dict, matched_terms: tuple[str, ...]) -> str:
+    word_count = doc.get("word_count", 0)
+    terms = ", ".join(matched_terms) if matched_terms else "none"
+    return f"Matched terms: {terms}; indexed words: {word_count}."
