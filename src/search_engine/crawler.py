@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 from collections import deque
 from collections.abc import Callable, Iterable, Iterator
@@ -20,6 +21,7 @@ from search_engine.models import CrawledPage
 from search_engine.parser import parse_quote_page
 
 LOGGER = logging.getLogger(__name__)
+LISTING_PAGE_RE = re.compile(r"^/page/\d+/?$")
 
 
 class PoliteCrawler:
@@ -43,14 +45,20 @@ class PoliteCrawler:
         self._clock = clock
         self._last_request_at: float | None = None
 
-    def crawl(self, start_url: str | None = None, max_pages: int | None = None) -> Iterator[CrawledPage]:
+    def crawl(
+        self,
+        start_url: str | None = None,
+        max_pages: int | None = None,
+        progress_callback: Callable[[int, str], None] | None = None,
+    ) -> Iterator[CrawledPage]:
         """Crawl internal pages from start_url using breadth-first order."""
 
         first_url = _canonical_url(urljoin(self.base_url, start_url or self.base_url))
         queue: deque[str] = deque([first_url])
         seen: set[str] = set()
+        yielded_count = 0
 
-        while queue and (max_pages is None or len(seen) < max_pages):
+        while queue and (max_pages is None or yielded_count < max_pages):
             url = queue.popleft()
             if url in seen:
                 continue
@@ -61,18 +69,28 @@ class PoliteCrawler:
                 continue
 
             page = CrawledPage(url=url, html=html)
+            yielded_count += 1
+            if progress_callback:
+                progress_callback(yielded_count, url)
             yield page
 
             parsed = parse_quote_page(html, url, self.base_url)
             for link in sorted(parsed.links, key=_crawl_priority):
                 canonical = _canonical_url(link)
-                if canonical not in seen and canonical not in queue:
+                if _is_first_page_alias(canonical):
+                    canonical = self.base_url
+                if _is_listing_page(canonical) and canonical not in seen and canonical not in queue:
                     queue.append(canonical)
 
-    def crawl_all(self, start_url: str | None = None, max_pages: int | None = None) -> list[CrawledPage]:
+    def crawl_all(
+        self,
+        start_url: str | None = None,
+        max_pages: int | None = None,
+        progress_callback: Callable[[int, str], None] | None = None,
+    ) -> list[CrawledPage]:
         """Return crawled pages as a list."""
 
-        return list(self.crawl(start_url=start_url, max_pages=max_pages))
+        return list(self.crawl(start_url=start_url, max_pages=max_pages, progress_callback=progress_callback))
 
     def _fetch(self, url: str) -> str | None:
         self._wait_if_needed()
@@ -116,6 +134,15 @@ def _canonical_url(url: str) -> str:
 
 def _crawl_priority(url: str) -> tuple[int, str]:
     path = urlparse(url).path
-    if path == "/" or path.startswith("/page/"):
+    if _is_listing_page(url):
         return (0, url)
     return (1, url)
+
+
+def _is_listing_page(url: str) -> bool:
+    path = urlparse(url).path
+    return path == "/" or bool(LISTING_PAGE_RE.fullmatch(path))
+
+
+def _is_first_page_alias(url: str) -> bool:
+    return urlparse(url).path == "/page/1/"

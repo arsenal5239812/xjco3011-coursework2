@@ -32,6 +32,7 @@ def build_index(
             "url": parsed.url,
             "title": parsed.title,
             "word_count": len(tokens),
+            "preview": _make_preview(parsed.text),
         }
 
         for term, positions in grouped_positions.items():
@@ -71,3 +72,10 @@ def build_index_from_html_pages(
         base_url=base_url,
         politeness_window_seconds=politeness_window_seconds,
     )
+
+
+def _make_preview(text: str, limit: int = 300) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3].rstrip() + "..."

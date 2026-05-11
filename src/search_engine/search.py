@@ -139,6 +139,22 @@ def _to_result(index: dict, doc_id: str, score: float, terms: list[str]) -> Sear
 
 
 def _make_snippet(doc: dict, matched_terms: tuple[str, ...]) -> str:
-    word_count = doc.get("word_count", 0)
-    terms = ", ".join(matched_terms) if matched_terms else "none"
-    return f"Matched terms: {terms}; indexed words: {word_count}."
+    preview = doc.get("preview", "")
+    if not preview:
+        word_count = doc.get("word_count", 0)
+        terms = ", ".join(matched_terms) if matched_terms else "none"
+        return f"Matched terms: {terms}; indexed words: {word_count}."
+
+    lower_preview = preview.lower()
+    for term in matched_terms:
+        position = lower_preview.find(term)
+        if position >= 0:
+            start = max(0, position - 45)
+            end = min(len(preview), position + len(term) + 75)
+            snippet = preview[start:end].strip()
+            if start > 0:
+                snippet = "..." + snippet
+            if end < len(preview):
+                snippet += "..."
+            return snippet
+    return preview[:120].strip()
