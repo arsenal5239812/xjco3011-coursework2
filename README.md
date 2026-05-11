@@ -38,6 +38,12 @@ Limit the crawl during development:
 python -m search_engine.main build --index data/index.json --max-pages 5
 ```
 
+The CLI also accepts global options before the subcommand:
+
+```powershell
+python -m search_engine.main --index data/index.json build --max-pages 5
+```
+
 Validate and summarize a saved index:
 
 ```powershell
@@ -56,6 +62,15 @@ Find ranked results:
 python -m search_engine.main --index data/index.json find Albert Einstein
 python -m search_engine.main --index data/index.json find '"there are only"'
 python -m search_engine.main --index data/index.json find life OR world
+python -m search_engine.main --index data/index.json find brave NOT missing
+python -m search_engine.main --index data/index.json find
+```
+
+If the package is installed with `python -m pip install -e .`, the console script is available too:
+
+```powershell
+mini-search --index data/index.json load
+mini-search --index data/index.json find Albert Einstein
 ```
 
 ## Commands
@@ -66,7 +81,7 @@ python -m search_engine.main --index data/index.json find life OR world
 
 `print <term>` shows document frequency, term frequency, positions, and URLs for a single term.
 
-`find <query>` searches the index and prints ranked results. Plain multi-term queries use AND semantics by default.
+`find <query>` searches the index and prints ranked results. Plain multi-term queries use AND semantics by default. An empty `find` command prints a friendly message instead of raw parser output.
 
 ## Testing
 
@@ -76,6 +91,8 @@ pytest --cov
 ```
 
 The crawler tests use fake sessions and fake sleep functions, so they do not depend on live network access and do not wait six seconds.
+
+For a demo-ready command sequence, see `docs/video_script.md` or run `scripts/demo_commands.ps1`.
 
 ## Project Layout
 
@@ -95,4 +112,4 @@ Supporting documentation is in `docs/`, tests are in `tests/`, and helper script
 
 ## Known Limitations
 
-This is intentionally a focused coursework search engine rather than a general web crawler. It only follows internal links for the configured site, stores a compact JSON index in memory, and implements simple boolean parsing without parentheses or operator precedence beyond left-to-right evaluation.
+This is intentionally a focused coursework search engine rather than a general web crawler. It only follows internal links for the configured site, stores a compact JSON index in memory, and implements simple boolean parsing without parentheses or full operator precedence. Boolean operators are evaluated by the project's simple left-to-right parser, so complex expressions should be kept small and explicit.

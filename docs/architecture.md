@@ -20,3 +20,5 @@ The modules deliberately exchange plain dataclasses and JSON-serializable dictio
 - Search is case-insensitive because every indexed term and query term uses the same tokenizer.
 - Multi-term `find` queries use AND semantics by default, which gives precise results for a small quote corpus.
 - Phrase search uses token positions in postings rather than scanning original HTML again.
+- Boolean search intentionally uses a small left-to-right parser for `AND`, `OR`, and `NOT`. It does not support parentheses or full precedence rules, which keeps the coursework implementation understandable.
+- CLI result output includes rank, score, title, URL, matched terms, and a short metadata snippet so terminal demos are easy to follow.

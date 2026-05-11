@@ -45,3 +45,7 @@ Document ids are stable within one build and stored as strings for JSON compatib
 ## Terms
 
 Each term maps to its document frequency and postings. A posting records how often the term appears in a document and the zero-based token positions where it appears. Those positions power phrase search.
+
+## Phrase Search
+
+Phrase search checks whether terms appear at consecutive positions inside a candidate document. For example, `"there are only"` first intersects the postings for `there`, `are`, and `only`, then verifies that their positions line up as `n`, `n+1`, and `n+2`.
